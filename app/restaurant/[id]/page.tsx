@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import { neon } from '@neondatabase/serverless';
-
-export const dynamic = 'force-dynamic';
+import { unstable_noStore as noStore } from 'next/cache';
 
 const sql = neon(process.env.DATABASE_URL!);
 
 async function getRestaurant(id: string) {
+  noStore();
   const restaurantId = parseInt(id);
   if (isNaN(restaurantId)) return null;
 
