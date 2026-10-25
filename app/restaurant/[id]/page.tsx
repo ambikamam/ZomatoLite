@@ -1,10 +1,60 @@
 import Link from 'next/link';
+import { neon } from '@neondatabase/serverless';
+
+export const dynamic = 'force-dynamic';
+
+const sql = neon(process.env.DATABASE_URL!);
 
 async function getRestaurant(id: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  const res = await fetch(`${baseUrl}/api/restaurants/${id}`, { cache: 'no-store' });
-  if (!res.ok) return null;
-  return res.json();
+  const restaurantId = parseInt(id);
+  if (isNaN(restaurantId)) return null;
+
+  const restaurants = await sql`SELECT name, cuisine, area FROM restaurants WHERE id = ${restaurantId}`;
+  if (restaurants.length === 0) return null;
+
+  const restaurant = restaurants[0];
+
+  const stats = await sql`SELECT AVG(rating)::numeric(10,1) as avg_rating, COUNT(*) as total_reviews FROM reviews WHERE restaurant_id = ${restaurantId}`;
+  const avgRating = stats[0].avg_rating;
+  const totalReviews = parseInt(stats[0].total_reviews);
+
+  if (totalReviews === 0) {
+    return {
+      name: restaurant.name,
+      cuisine: restaurant.cuisine,
+      area: restaurant.area,
+      averageRating: null,
+      totalReviews: 0,
+      latestReview: null,
+      reviews: []
+    };
+  }
+
+  const allReviews = await sql`SELECT id, rating, comment, created_at FROM reviews WHERE restaurant_id = ${restaurantId} ORDER BY created_at DESC, id DESC`;
+
+  const latestReview = {
+    id: allReviews[0].id,
+    rating: allReviews[0].rating,
+    comment: allReviews[0].comment,
+    createdAt: allReviews[0].created_at
+  };
+
+  const olderReviews = allReviews.slice(1).map((r: any) => ({
+    id: r.id,
+    rating: r.rating,
+    comment: r.comment,
+    createdAt: r.created_at
+  }));
+
+  return {
+    name: restaurant.name,
+    cuisine: restaurant.cuisine,
+    area: restaurant.area,
+    averageRating: avgRating === null ? null : parseFloat(avgRating),
+    totalReviews: totalReviews,
+    latestReview: latestReview,
+    reviews: olderReviews
+  };
 }
 
 export default async function RestaurantPage({ params }: { params: Promise<{ id: string }> }) {
