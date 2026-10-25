@@ -4,6 +4,32 @@ import { unstable_noStore as noStore } from 'next/cache';
 
 const sql = neon(process.env.DATABASE_URL!);
 
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function Stars({ rating }: { rating: number }) {
+  return (
+    <span className="text-lg tracking-tight text-[#1e9e60]">
+      {'★'.repeat(rating)}
+      <span className="text-[#dcdcdc]">{'★'.repeat(5 - rating)}</span>
+    </span>
+  );
+}
+
+function Header() {
+  return (
+    <header className="border-b border-[#ececec] bg-white px-5 py-4">
+      <span className="text-xl font-extrabold italic text-[#fc8019]">zomato</span>
+      <span className="text-xl font-extrabold text-[#3d4152]"> lite</span>
+    </header>
+  );
+}
+
 async function getRestaurant(id: string) {
   noStore();
   const restaurantId = parseInt(id);
@@ -63,50 +89,63 @@ export default async function RestaurantPage({ params }: { params: Promise<{ id:
 
   if (!data) {
     return (
-      <main className="min-h-screen bg-[#faf9f7] text-[#1a1a1a]">
-        <div className="mx-auto max-w-[560px] px-4 py-10">
-          <p>Restaurant not found.</p>
-          <Link href="/" className="text-sm text-[#b8860b] hover:underline">Back home</Link>
-        </div>
-      </main>
+      <>
+        <Header />
+        <main className="mx-auto max-w-[600px] px-5 py-10">
+          <div className="rounded-xl bg-white p-6 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+            <p className="font-semibold text-[#3d4152]">Restaurant not found.</p>
+            <Link href="/" className="mt-3 inline-block text-sm font-bold text-[#fc8019]">
+              Back home
+            </Link>
+          </div>
+        </main>
+      </>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#faf9f7] text-[#1a1a1a]">
-      <div className="mx-auto max-w-[560px] px-4 py-10 space-y-8">
-        <div>
-          <h1 className="text-2xl font-semibold">{data.name}</h1>
-          <p className="text-sm text-[#666]">{data.cuisine}, {data.area}</p>
-        </div>
+    <>
+      <Header />
+      <main className="mx-auto max-w-[600px] space-y-5 px-5 py-6">
+        {/* Restaurant hero card */}
+        <section className="rounded-xl bg-white p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+          <h1 className="text-2xl font-extrabold text-[#1c1c1c]">{data.name}</h1>
+          <p className="mt-1 text-sm text-[#7e7e7e]">{data.cuisine}, {data.area}</p>
 
-        <div className="flex items-baseline gap-2">
-          <span className="text-4xl font-semibold">
-            {data.averageRating === null ? '—' : data.averageRating}
-          </span>
-          <span className="text-sm text-[#666]">
-            {data.totalReviews === 0 ? 'No reviews yet' : `${data.totalReviews} review${data.totalReviews === 1 ? '' : 's'}`}
-          </span>
-        </div>
+          <div className="my-4 border-t border-dashed border-[#e9e9e9]" />
+
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1 rounded-lg bg-[#1e9e60] px-2 py-1 text-sm font-bold text-white">
+              ★ {data.averageRating === null ? '—' : data.averageRating}
+            </span>
+            <span className="text-sm text-[#7e7e7e]">
+              {data.totalReviews === 0
+                ? 'No reviews yet'
+                : `${data.totalReviews} review${data.totalReviews === 1 ? '' : 's'}`}
+            </span>
+          </div>
+        </section>
 
         {data.latestReview && (
-          <section>
-            <h2 className="text-sm font-medium mb-2">Latest review</h2>
-            <div className="rounded border border-[#e5e2dc] bg-white p-4">
-              <div className="text-[#b8860b] mb-1">{'★'.repeat(data.latestReview.rating)}{'☆'.repeat(5 - data.latestReview.rating)}</div>
-              <p className="text-sm">{data.latestReview.comment}</p>
+          <section className="rounded-xl bg-white p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+            <h2 className="text-xs font-bold uppercase tracking-wide text-[#7e7e7e]">Latest review</h2>
+            <div className="mt-3 rounded-lg bg-[#fff6ef] p-4">
+              <Stars rating={data.latestReview.rating} />
+              <p className="mt-2 text-[15px] font-medium text-[#1c1c1c]">{data.latestReview.comment}</p>
+              <p className="mt-2 text-xs text-[#a5a5a5]">{formatDate(data.latestReview.createdAt)}</p>
             </div>
           </section>
         )}
 
-        {data.reviews && data.reviews.length > 0 && (
-          <section>
-            <h2 className="text-sm font-medium mb-2">Older reviews</h2>
-            <ul className="space-y-3">
+        {data.reviews.length > 0 && (
+          <section className="rounded-xl bg-white p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+            <h2 className="text-xs font-bold uppercase tracking-wide text-[#7e7e7e]">Other reviews</h2>
+            <ul className="mt-3 space-y-4">
               {data.reviews.map((review: any) => (
-                <li key={review.id} className="border-t border-[#e5e2dc] pt-3 first:border-t-0 first:pt-0">
-                  <div className="text-[#b8860b] text-sm mb-1">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</div>
-                  <p className="text-sm">{review.comment}</p>
+                <li key={review.id} className="border-t border-[#f0f0f0] pt-4 first:border-t-0 first:pt-0">
+                  <Stars rating={review.rating} />
+                  <p className="mt-1 text-[15px] text-[#3d4152]">{review.comment}</p>
+                  <p className="mt-1 text-xs text-[#a5a5a5]">{formatDate(review.createdAt)}</p>
                 </li>
               ))}
             </ul>
@@ -114,17 +153,18 @@ export default async function RestaurantPage({ params }: { params: Promise<{ id:
         )}
 
         {data.totalReviews === 0 && (
-          <div className="text-center py-6 text-sm text-[#666]">
-            No reviews yet. Be the first to share your experience.
+          <div className="rounded-xl bg-white p-6 text-center shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+            <p className="text-sm text-[#7e7e7e]">No reviews yet. Be the first to share your experience.</p>
           </div>
         )}
 
-        <div>
-          <Link href={`/review/${id}`} className="text-sm text-[#b8860b] hover:underline">
-            Write a review
-          </Link>
-        </div>
-      </div>
-    </main>
+        <Link
+          href={`/review/${id}`}
+          className="block rounded-lg bg-[#fc8019] py-3.5 text-center font-bold text-white active:bg-[#e67217]"
+        >
+          Write a Review
+        </Link>
+      </main>
+    </>
   );
 }

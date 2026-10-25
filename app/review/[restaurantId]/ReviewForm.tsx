@@ -57,52 +57,54 @@ export default function ReviewForm() {
   }
 
   return (
-    <main className="min-h-screen bg-[#faf9f7] text-[#1a1a1a]">
-      <div className="mx-auto max-w-[560px] px-4 py-10">
-        <h1 className="text-2xl font-semibold mb-1">Write a review</h1>
-        {restaurantName && <p className="text-sm text-[#666] mb-8">{restaurantName}</p>}
+    <div className="rounded-xl bg-white p-5 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+      <h1 className="text-2xl font-extrabold text-[#1c1c1c]">Write a Review</h1>
+      {restaurantName && <p className="mt-1 text-sm text-[#7e7e7e]">for {restaurantName}</p>}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm mb-2">Rating</label>
-            <div className="flex gap-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  type="button"
-                  key={star}
-                  onClick={() => setRating(star)}
-                  className={`text-2xl ${rating !== null && star <= rating ? 'text-[#b8860b]' : 'text-[#ccc]'}`}
-                  aria-label={`${star} star`}
-                >
-                  ★
-                </button>
-              ))}
-            </div>
+      <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wide text-[#7e7e7e]">Rating</label>
+          <div className="mt-3 flex gap-2">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                type="button"
+                key={star}
+                onClick={() => setRating(star)}
+                className={`text-4xl leading-none transition-colors ${
+                  rating !== null && star <= rating ? 'text-[#fc8019]' : 'text-[#dcdcdc]'
+                }`}
+                aria-label={`${star} star`}
+              >
+                ★
+              </button>
+            ))}
           </div>
+        </div>
 
-          <div>
-            <label className="block text-sm mb-2" htmlFor="comment">Comment</label>
-            <textarea
-              id="comment"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className="w-full rounded border border-[#ddd] bg-white px-3 py-2 text-sm focus:outline-none focus:border-[#b8860b]"
-              rows={4}
-              placeholder="Share your experience..."
-            />
-          </div>
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wide text-[#7e7e7e]" htmlFor="comment">
+            Comment
+          </label>
+          <textarea
+            id="comment"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            className="mt-3 w-full rounded-lg border border-[#e9e9e9] bg-[#f8f8f8] px-4 py-3 text-[15px] text-[#1c1c1c] focus:border-[#fc8019] focus:outline-none"
+            rows={4}
+            placeholder="Share your experience..."
+          />
+        </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm font-medium text-red-500">{error}</p>}
 
-          <button
-            type="submit"
-            disabled={!canSubmit}
-            className="rounded bg-[#b8860b] px-4 py-2 text-sm text-white disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {submitting ? 'Submitting...' : 'Submit'}
-          </button>
-        </form>
-      </div>
-    </main>
+        <button
+          type="submit"
+          disabled={!canSubmit}
+          className="w-full rounded-lg bg-[#fc8019] py-3.5 font-bold text-white transition-colors disabled:cursor-not-allowed disabled:bg-[#d8d8d8] disabled:text-[#8f8f8f]"
+        >
+          {submitting ? 'Submitting...' : 'Submit Review'}
+        </button>
+      </form>
+    </div>
   );
 }
